@@ -1,0 +1,31 @@
+name: lint
+
+on:
+  workflow_call:
+    inputs:
+      shell-paths:
+        description: Space-separated directories to scan for *.sh files
+        type: string
+        default: scripts tests
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install actionlint
+        run: |
+          scripts/install-actionlint.sh "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Lint
+        env:
+          SHELL_PATHS: ${{ inputs.shell-paths }}
+        run: |
+          read -ra paths <<< "$SHELL_PATHS"
+          scripts/lint.sh "${paths[@]}"
